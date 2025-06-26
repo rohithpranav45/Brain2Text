@@ -1,263 +1,167 @@
 # Curriculum Contrastive EEG-to-Text Model
 
-[![GitHub](https://img.shields.io/badge/GitHub-Repository-blue)](https://github.com/amar3012005/Contrastive_EEG.git)
-[![Python](https://img.shields.io/badge/Python-3.8+-green)](https://python.org)
-[![PyTorch](https://img.shields.io/badge/PyTorch-1.8+-orange)](https://pytorch.org)
+A deep learning framework that aligns EEG brain signals with text using curriculum contrastive learning.
 
-An advanced deep learning framework that implements **Curriculum Contrastive Learning** to progressively align EEG brain signals with corresponding text representations. This project mimics human learning behavior by introducing the model to simpler examples first and gradually increasing complexity.
+## Overview
 
-## 🧠 Project Overview
+This project implements a novel approach to map brain signals recorded during natural reading to their corresponding text representations. The model uses dual encoder networks that learn a shared semantic space where EEG and word embeddings are aligned through contrastive learning.
 
-This implementation maps brain signals recorded during natural reading to corresponding text tokens using dual encoder networks. The encoders learn a **shared semantic space** where EEG and word embeddings are aligned via contrastive learning objectives (InfoNCE loss).
+**Key Innovation**: Curriculum learning strategy that progressively trains the model from simple to complex examples, mimicking human learning behavior.
 
-### Key Features
+## Features
 
-- **Curriculum Contrastive Learning**: Progressive training from simple to complex examples
-- **Dual Encoder Architecture**: Separate encoders for EEG signals and text
-- **InfoNCE Loss**: Bidirectional contrastive learning (EEG↔Text)
-- **Transformer-based EEG Encoder**: Advanced signal processing with attention mechanisms
-- **Two-Step Training Strategy**: Optimized training pipeline with adaptive learning rates
+- **Dual Encoder Architecture** - Separate encoders for EEG signals and text
+- **Curriculum Learning** - Progressive training from simple to complex examples  
+- **Contrastive Learning** - InfoNCE loss for bidirectional EEG-text alignment
+- **Transformer-based Processing** - Advanced EEG signal processing with attention
+- **Two-Step Training** - Optimized training pipeline with adaptive learning rates
 
-## 📊 Dataset
-
-### Source: ZuCo EEG2Text Dataset
-- **Subject**: ZJN (8 reading sessions: SR1–SR8)
-- **Channels**: 105 EEG channels
-- **Signal Length**: 65 to 2,314 timepoints per word
-- **Total Entries**: 772 word-level recordings across all sessions
-- **Data Format**: `.npz` files for EEG vectors, `.csv` files for metadata
-
-### Data Properties
-- **EEG Statistics per word**:
-  - Mean: -1.47 to 2.54
-  - Standard Deviation: 2.83 to 7.17
-- **Semantic Filtering**: Words with correlation <0.3 across subjects removed
-- **Word-aligned**: Fixation-aligned EEG segments per word
-
-## 🏗️ Architecture
-
-### EEG Encoder
-```
-105-channel EEG → Linear Projection → Positional Encoding → 
-Transformer Layers (Multi-head Attention) → Global Average Pooling → 
-Projection Head → L2 Normalization → 128D Embedding
-```
-
-### Text Encoder
-```
-Text Tokens → BART Encoder → CLS Token → Linear Projection → 
-Layer Normalization → 128D Embedding
-```
-
-### Contrastive Learning
-- **Similarity Matrix**: Cosine similarity between EEG and text embeddings
-- **Temperature**: τ = 0.07 for InfoNCE loss
-- **Bidirectional**: Both EEG→Text and Text→EEG directions
-- **Loss**: InfoNCE with cross-entropy on similarity matrix
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Python 3.8+
-- PyTorch 1.8+
-- CUDA (optional, for GPU acceleration)
+## Quick Start
 
 ### Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/amar3012005/Contrastive_EEG.git
 cd Contrastive_EEG
 
 # Create virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 ```
 
-### Fix NumPy Issues (if encountered)
-```bash
-pip uninstall -y numpy
-pip install numpy --force-reinstall
-```
-
-## 📁 Project Structure
-
-```
-Contrastive_EEG/
-│
-├── config/                  # Configuration files
-│   └── config.yaml          # Main configuration
-│
-├── src/                     # Source code
-│   ├── data/                # Data loading and processing
-│   │   └── data_loader.py   # ZuCo dataset loader
-│   │
-│   ├── models/              # Model implementations
-│   │   ├── encoders.py      # EEG encoder and projection head
-│   │   └── contrastive_model.py # Main contrastive model
-│   │
-│   └── training/            # Training utilities
-│       └── trainer.py       # Two-step trainer implementation
-│
-├── utils/                   # Utility functions
-│   ├── config_utils.py      # Configuration utilities
-│   └── visualization.py     # Visualization tools
-│
-├── scripts/                 # Executable scripts
-│   ├── train.py             # Training script
-│   └── evaluate.py          # Evaluation script
-│
-└── notebooks/               # Jupyter notebooks
-    └── Contrastive_EEG_Demo.ipynb  # Interactive demo
-```
-
-## 🎯 Usage
-
 ### Training
 
-#### Basic Training
 ```bash
-cd Contrastive_EEG
+# Basic training
 python scripts/train.py --config config/config.yaml
-```
 
-#### Custom Parameters
-```bash
+# Custom parameters
 python scripts/train.py \
     --config config/config.yaml \
-    --output-dir custom_output \
-    --data-path ../ZuCo/task1-SR/pickle/task1-SR-dataset.pickle \
     --batch-size 16 \
     --step1-epochs 30 \
-    --step2-epochs 15 \
-    --seed 42
+    --step2-epochs 15
 ```
 
 ### Evaluation
+
 ```bash
 python scripts/evaluate.py \
-    --model-path output/contrastive_model/run_YYYYMMDD_HHMMSS/best_model_step2.pt \
-    --data-path ../ZuCo/task1-SR/pickle/task1-SR-dataset.pickle \
-    --output-dir evaluation_results
+    --model-path output/best_model.pt \
+    --data-path data/zuco_dataset.pickle
 ```
 
-### Interactive Demo
-```bash
-jupyter notebook notebooks/Contrastive_EEG_Demo.ipynb
+## Dataset
+
+**Source**: ZuCo EEG2Text Dataset (Subject ZJN)
+
+- **Sessions**: 8 reading sessions (SR1-SR8)
+- **Channels**: 105 EEG channels
+- **Words**: 772 word-level recordings
+- **Signal Length**: 65-2,314 timepoints per word
+- **Format**: NPZ files for EEG data, CSV for metadata
+
+## Architecture
+
+### EEG Encoder
+```
+EEG Input (105 channels) → Linear Projection → Positional Encoding → 
+Transformer Layers → Global Pooling → Projection Head → 128D Embedding
 ```
 
-## 📈 Training Strategy
+### Text Encoder
+```
+Text Tokens → BART Encoder → CLS Token → 
+Linear Projection → Layer Norm → 128D Embedding
+```
+
+### Contrastive Learning
+- **Loss Function**: InfoNCE (bidirectional)
+- **Temperature**: 0.07
+- **Similarity**: Cosine similarity between embeddings
+- **Objective**: Maximize mutual information between EEG and text
+
+## Training Strategy
 
 ### Curriculum Learning Phases
 
-1. **Basic Level**: High-frequency words, low EEG entropy
-2. **Intermediate Level**: Medium complexity words
-3. **Advanced Level**: Complex words, high variance EEG signals
+1. **Basic**: High-frequency words, simple EEG patterns
+2. **Intermediate**: Medium complexity examples
+3. **Advanced**: Complex words, high-variance EEG signals
 
-### Two-Step Training Process
+### Two-Step Process
 
-**Step 1: Foundation Training**
-- Frozen BART layers (except embeddings and first layer)
+**Step 1 - Foundation Training**
+- Frozen BART layers (except embeddings)
 - Higher learning rate for EEG encoder
-- Focus on basic EEG-text alignment
+- Focus on basic alignment
 
-**Step 2: Fine-tuning**
+**Step 2 - Fine-tuning**
 - All parameters trainable
 - Lower learning rate
 - Refined semantic alignment
 
-## 📊 Evaluation Metrics
+## Results
 
-| Metric | Description |
-|--------|-------------|
-| **Contrastive Accuracy** | Correct match ranking in similarity matrix |
-| **InfoNCE Loss** | Bidirectional contrastive loss values |
-| **Cross-modal Retrieval** | Precision@K, Recall@K, MRR |
-| **t-SNE Visualization** | Embedding space alignment quality |
-| **Similarity Matrix** | EEG-text correspondence patterns |
+The model produces:
 
-## 🔧 Configuration
+- **Training Metrics** - Loss curves and accuracy over time
+- **Embedding Visualizations** - t-SNE plots of learned representations
+- **Similarity Matrices** - EEG-text alignment patterns
+- **Cross-modal Retrieval** - Precision@K and recall metrics
 
-Key parameters in `config/config.yaml`:
+## Evaluation Metrics
 
-```yaml
-model:
-  eeg_encoder:
-    d_model: 512
-    nhead: 8
-    num_layers: 6
-    dropout: 0.1
-  
-  projection:
-    hidden_dim: 256
-    output_dim: 128
-    dropout: 0.1
+- **Contrastive Accuracy** - Correct matches in similarity ranking
+- **InfoNCE Loss** - Contrastive learning objective
+- **Cross-modal Retrieval** - Precision@K, Recall@K, MRR
+- **Embedding Quality** - t-SNE visualization analysis
 
-training:
-  step1_epochs: 30
-  step2_epochs: 15
-  batch_size: 8
-  learning_rate: 0.001
-  temperature: 0.07
-```
+## Applications
 
-## 🛠️ Troubleshooting
+- Brain-computer interfaces
+- Neurolinguistic research
+- Cognitive modeling
+- Medical diagnostics
+- Human-AI interaction
 
-### Common Issues
+## Requirements
 
-**NumPy Import Errors**
+- Python 3.8+
+- PyTorch 1.8+
+- Transformers (Hugging Face)
+- NumPy, Scikit-learn
+- Matplotlib, Seaborn
+
+## Troubleshooting
+
+**NumPy Issues**
 ```bash
 pip uninstall numpy
 pip install numpy==1.24.3
 ```
 
-**CUDA Memory Issues**
-- Reduce batch size in config
-- Use gradient accumulation
-- Enable mixed precision training
+**CUDA Memory**
+- Reduce batch size
+- Enable gradient checkpointing
 
-**Dataset Path Issues**
-- Verify ZuCo dataset location: `../ZuCo/task1-SR/pickle/task1-SR-dataset.pickle`
-- Update paths in config file or command line
+**Dataset Path**
+- Verify ZuCo dataset location
+- Update paths in config file
 
-### Performance Optimization
+## Contributing
 
-- **GPU Training**: Automatic CUDA detection and usage
-- **Memory Management**: Gradient checkpointing for large models
-- **Batch Processing**: Dynamic batch sizing based on available memory
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/name`)
+3. Commit changes (`git commit -m 'Add feature'`)
+4. Push branch (`git push origin feature/name`)
+5. Open Pull Request
 
-## 📈 Results & Visualizations
+## References
 
-Training produces:
-- **Loss Curves**: Training and validation metrics over time
-- **Embedding Plots**: t-SNE visualizations of learned representations
-- **Similarity Matrices**: EEG-text alignment patterns
-- **Curriculum Performance**: Progressive learning effectiveness
-- **Cross-modal Retrieval**: Quantitative alignment metrics
-
-## 🔬 Research Applications
-
-- **Brain-Computer Interfaces**: Direct thought-to-text translation
-- **Neurolinguistics**: Understanding brain language processing
-- **Cognitive Modeling**: Computational models of reading comprehension
-- **Medical Diagnostics**: EEG-based language disorder detection
-- **Human-AI Interaction**: Brain signal-driven AI systems
-
-## 📚 References
-
-- **ZuCo Dataset**: [Hollenstein et al., 2018 - Nature Scientific Data](https://www.nature.com/articles/sdata2018291)
-- **InfoNCE Loss**: [van den Oord et al., 2018 - arXiv:1807.03748](https://arxiv.org/abs/1807.03748)
-- **BART Model**: [Lewis et al., 2019 - arXiv:1910.13461](https://arxiv.org/abs/1910.13461)
-- **Contrastive Learning**: [Chen et al., 2020 - ICML](https://proceedings.mlr.press/v119/chen20j.html)
-
-
-## 🙏 Acknowledgments
-
-- ZuCo dataset creators for providing high-quality EEG-text data
-- Hugging Face for transformer implementations
-- PyTorch team for the deep learning framework
-- Research community for curriculum and contrastive learning advances
- 
+- **ZuCo Dataset**: [Hollenstein et al., 2018](https://www.nature.com/articles/sdata2018291)
+- **InfoNCE Loss**: [van den Oord et al., 2018](https://arxiv.org/abs/1807.03748)
+- **BART**: [Lewis et al., 2019](https://arxiv.org/abs/1910.13461)
